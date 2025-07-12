@@ -89,23 +89,23 @@ def client(monkeypatch):
     client, _ = get_test_client(monkeypatch)
     return client
 
-def test_list_users_empty(client):
-    response = client.get('/users')
+def test_list_guides_empty(client):
+    response = client.get('/guides')
     assert response.status_code == 200
     assert response.json() == []
 
-def test_create_and_get_user(monkeypatch):
+def test_create_and_get_guide(monkeypatch):
     client, module = get_test_client(monkeypatch)
-    user_data = {'name': 'Alice', 'telegram': '@alice', 'excursionsDone': 0}
-    resp = client.post('/users', json=user_data)
+    guide_data = {'name': 'Alice', 'avatar': '', 'bio': '', 'createdAt': '', 'email': '', 'level': '', 'phone': '', 'telegramAlias': '@alice', 'excursionsDone': 0}
+    resp = client.post('/guides', json=guide_data)
     assert resp.status_code == 200
     created = resp.json()
     assert created['name'] == 'Alice'
-    user_id = created['id']
-    resp = client.get(f'/users/{user_id}')
+    guide_id = created['id']
+    resp = client.get(f'/guides/{guide_id}')
     assert resp.status_code == 200
-    assert resp.json()['telegram'] == '@alice'
+    assert resp.json()['telegramAlias'] == '@alice'
     # delete user and verify 404
-    client.delete(f'/users/{user_id}')
-    resp = client.get(f'/users/{user_id}')
+    client.delete(f'/guides/{guide_id}')
+    resp = client.get(f'/guides/{guide_id}')
     assert resp.status_code == 404
