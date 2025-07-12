@@ -75,12 +75,18 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           .createUserWithEmailAndPassword(email: email, password: password);
 
       await FirebaseFirestore.instance
-          .collection('users')
+          .collection('guides')
           .doc(userCred.user!.uid)
           .set({
-        'telegram': tg,
+        'telegramAlias': tg,
         'excursionsDone': 0,
         'name': name,
+        'avatar': '',
+        'bio': '',
+        'createdAt': Timestamp.now(),
+        'email': email,
+        'level': '',
+        'phone': '',
       });
 
       if (mounted) {

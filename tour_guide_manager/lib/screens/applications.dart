@@ -18,13 +18,13 @@ class _ApplicationsState extends State<Applications> {
   @override
   void initState() {
     super.initState();
-    _loadCustomers();
+    _loadCompanies();
   }
 
-  Future<void> _loadCustomers() async {
+  Future<void> _loadCompanies() async {
     final firestore = FirebaseFirestore.instance;
     final userEmail = FirebaseAuth.instance.currentUser!.email!;
-    final snapshot = await firestore.collection('customers').get();
+    final snapshot = await firestore.collection('companies').get();
 
     final List<String> parsedCustomers = [];
     for (var doc in snapshot.docs) {
