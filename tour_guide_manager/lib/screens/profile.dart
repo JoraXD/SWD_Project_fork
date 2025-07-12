@@ -33,7 +33,7 @@ class Profile extends StatelessWidget {
       backgroundColor: const Color(0xffE6F2FF),
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('users')
+            .collection('guides')
             .doc(userId)
             .snapshots(),
         builder: (context, snapshot) {
@@ -88,7 +88,7 @@ class Profile extends StatelessWidget {
           }
           // Safe cast with null check
           final userData = snapshot.data!.data() as Map<String, dynamic>? ?? {};
-          final user = UserProfile.fromFirestore(userData);
+          final user = GuideProfile.fromFirestore(userData);
 
           return Center(
             child: Column(
@@ -134,18 +134,39 @@ class Profile extends StatelessWidget {
   }
 }
 
-class UserProfile {
+class GuideProfile {
   final String name;
-  final int excursionsDone; // Changed to int
+  final String avatar;
+  final String bio;
+  final DateTime createdAt;
+  final String email;
+  final String level;
+  final String phone;
+  final String telegramAlias;
+  final int excursionsDone;
 
-  UserProfile({
+  GuideProfile({
     required this.name,
+    required this.avatar,
+    required this.bio,
+    required this.createdAt,
+    required this.email,
+    required this.level,
+    required this.phone,
+    required this.telegramAlias,
     required this.excursionsDone,
   });
 
-  factory UserProfile.fromFirestore(Map<String, dynamic> data) {
-    return UserProfile(
+  factory GuideProfile.fromFirestore(Map<String, dynamic> data) {
+    return GuideProfile(
       name: data['name']?.toString() ?? 'Имя не указано',
+      avatar: data['avatar']?.toString() ?? '',
+      bio: data['bio']?.toString() ?? '',
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      email: data['email']?.toString() ?? '',
+      level: data['level']?.toString() ?? '',
+      phone: data['phone']?.toString() ?? '',
+      telegramAlias: data['telegramAlias']?.toString() ?? '',
       excursionsDone: (data['excursionsDone'] as int?) ?? 0,
     );
   }
