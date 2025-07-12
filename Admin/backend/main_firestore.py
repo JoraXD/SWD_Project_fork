@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List
+from datetime import datetime
 import os
 import uvicorn
 from dotenv import load_dotenv
@@ -84,6 +85,18 @@ class CompanyOut(Company):
     id:str
 
 
+def _normalize_company_data(data: dict) -> dict:
+    created_at = data.get("createdAt")
+    if created_at is None:
+        data["createdAt"] = ""
+    elif isinstance(created_at, datetime) or hasattr(created_at, "isoformat"):
+        data["createdAt"] = created_at.isoformat()
+    else:
+        data["createdAt"] = str(created_at)
+    data.setdefault("banList", [])
+    return data
+
+
 class ExcursionOut(Excursion):
     id: str
 
@@ -92,10 +105,22 @@ class GuideOut(Guide):
     id: str
 
 
+def _normalize_guide_data(data: dict) -> dict:
+    created_at = data.get("createdAt")
+    if created_at is None:
+        data["createdAt"] = ""
+    elif isinstance(created_at, datetime) or hasattr(created_at, "isoformat"):
+        data["createdAt"] = created_at.isoformat()
+    else:
+        data["createdAt"] = str(created_at)
+    data.setdefault("excursionsDone", 0)
+    return data
+
+
 @app.get("/guides", response_model=List[GuideOut])
 def list_guides():
     docs = guides_ref.stream()
-    return [GuideOut(id=doc.id, **doc.to_dict()) for doc in docs]
+    return [GuideOut(id=doc.id, **_normalize_guide_data(doc.to_dict())) for doc in docs]
 
 
 @app.post("/guides", response_model=GuideOut)
@@ -103,7 +128,7 @@ def create_guide(guide: Guide):
     data = guide.dict()
     doc_ref = guides_ref.document()
     doc_ref.set(data)
-    return GuideOut(id=doc_ref.id, **data)
+    return GuideOut(id=doc_ref.id, **_normalize_guide_data(data))
 
 
 @app.get("/guides/{guide_id}", response_model=GuideOut)
@@ -111,7 +136,7 @@ def get_guide(guide_id: str):
     doc = guides_ref.document(guide_id).get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Guide not found")
-    return GuideOut(id=doc.id, **doc.to_dict())
+    return GuideOut(id=doc.id, **_normalize_guide_data(doc.to_dict()))
 
 
 @app.put("/guides/{guide_id}", response_model=GuideOut)
@@ -121,7 +146,7 @@ def update_guide(guide_id: str, guide: Guide):
         raise HTTPException(status_code=404, detail="Guide not found")
     doc_ref.update(guide.dict())
     data = doc_ref.get().to_dict()
-    return GuideOut(id=doc_ref.id, **data)
+    return GuideOut(id=doc_ref.id, **_normalize_guide_data(data))
 
 
 @app.delete("/guides/{guide_id}")
@@ -176,7 +201,7 @@ def delete_excursion(excursion_id: str):
 @app.get("/companies", response_model=List[CompanyOut])
 def list_companies():
     docs = companies_ref.stream()
-    return [CompanyOut(id=doc.id, **doc.to_dict()) for doc in docs]
+    return [CompanyOut(id=doc.id, **_normalize_company_data(doc.to_dict())) for doc in docs]
 
 
 @app.post("/companies", response_model=CompanyOut)
@@ -184,7 +209,7 @@ def create_company(company: Company):
     data = company.dict()
     doc_ref = companies_ref.document()
     doc_ref.set(data)
-    return CompanyOut(id=doc_ref.id, **data)
+    return CompanyOut(id=doc_ref.id, **_normalize_company_data(data))
 
 
 @app.get("/companies/{company_id}", response_model=CompanyOut)
@@ -192,7 +217,7 @@ def get_company(company_id: str):
     doc = companies_ref.document(company_id).get()
     if not doc.exists:
         raise HTTPException(status_code=404, detail="Company not found")
-    return CompanyOut(id=doc.id, **doc.to_dict())
+    return CompanyOut(id=doc.id, **_normalize_company_data(doc.to_dict()))
 
 
 @app.put("/companies/{company_id}", response_model=CompanyOut)
@@ -202,7 +227,7 @@ def update_company(company_id: str, company: Company):
         raise HTTPException(status_code=404, detail="Company not found")
     doc_ref.update(company.dict())
     data = doc_ref.get().to_dict()
-    return CompanyOut(id=doc_ref.id, **data)
+    return CompanyOut(id=doc_ref.id, **_normalize_company_data(data))
 
 
 @app.delete("/companies/{company_id}")
